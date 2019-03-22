@@ -1,29 +1,60 @@
 <template>
   <div>
-    <div class="ships">
-      <div
-        v-for="ship in availableShips"
-        @click="selectShip(ship)"
-        :key="ship.id"
-        class="ships__size"
-        :class="`ships__size--${ship.length}`"
-      >{{ ship.name }}</div>
-    </div>
-    <button @click="changeShipDirection">Change direction</button>
-    <div class="grid">
-      <template v-for="y in grid" style="display:flex;">
-        <!-- eslint-disable-next-line -->
-        <div
-          v-for="x in y.rows"
-          @mouseover="showingShip"
-          @mouseout="removeShip"
-          @click="test({x: x.row, y: y.column})"
-          :data-column="`${y.column}`"
-          :data-row="`${x.row}`"
-          class="grid__cell"
-          :class="{ 'grid__cell--hit': x.hit, 'grid__cell--placed': x.shipId}"
-        ></div>
-      </template>
+    <div style="display:flex;">
+        <div class="ships">
+            <div class="ships__list">
+                <div
+                    v-for="ship in ships"
+                    @click="selectShip(ship)"
+                    :key="ship.id"
+                    class="ships__size"
+                    :class="[`ships__size--${ship.length}`, {'not-available': ship.isReady }]"
+                >{{ ship.name }}
+                </div>
+                <button @click="changeShipDirection">Change ship direction</button>
+                <button :disabled="!isPlaying" @click="startGame">Start Game</button>
+            </div>
+        </div>
+        <div class="grid" style="margin-right:10rem;">
+            <template v-for="y in grid" style="display:flex;">
+                <!-- eslint-disable-next-line -->
+                <div
+                v-for="x in y.rows"
+                @mouseover="moveShipOnGrid"
+                @mouseout="removeShip"
+                @click="addShipIdToGrid({x: x.row, y: y.column})"
+                :data-column="`${y.column}`"
+                :data-row="`${x.row}`"
+                class="grid__cell"
+                :class="{ 'grid__cell--hit': x.hit, 'grid__cell--placed': !x.isEmpty, 'grid__cell--ship': x.isHovered, 'grid__cell--missed': x.missed}"
+                ></div>
+            </template>
+        </div>
+        <div v-if="isPlaying && AIGrid.length > 0" style="display:flex">
+            <div class="grid">
+                <template v-for="y in AIGrid" style="display:flex;">
+                    <!-- eslint-disable-next-line -->
+                    <div
+                    v-for="x in y.rows"
+                    @click="attackShip({x: x.row, y: y.column})"
+                    class="grid__cell"
+                    :class="{ 'grid__cell--hit': x.hit, 'grid__cell--missed': x.missed}"
+                    ></div>
+                </template>
+            </div>
+            <div class="ships">
+                <div class="ships__list">
+                    <div
+                        v-for="ship in ships"
+                        @click="selectShip(ship)"
+                        :key="ship.id"
+                        class="ships__size"
+                        :class="[`ships__size--${ship.length}`, {'not-available': ship.isSinked }]"
+                    >{{ ship.name }}
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
   </div>
 </template>
@@ -33,76 +64,105 @@ import shipsList from './assets/js/ships'
 export default {
   data() {
     return {
-      isPlaying: false,
       gridSize: 10,
       ships: shipsList,
       selectedShip: {},
+      lastAIAttack: '',
       grid: [],
+      AIGrid: []
     };
   },
   computed: {
-      availableShips() {
-          return this.ships.filter(ship => !ship.ready)
+      isPlaying() {
+          return this.ships.every(ship => ship.isReady)
       }
   },
   methods: {
-    test(coordinates) {
-      if (this.isPlaying) {
-        this.grid[coordinates.y].rows[coordinates.x].hit = true;
-      } else {
-          for (let i = 0; i < this.selectedShip.length; i++) {
+    attackShip(coordinates) {
+        const cell = this.AIGrid[coordinates.y].rows[coordinates.x]
+        const ship = this.ships[cell.shipId]
+        if (cell.isEmpty) {
+            cell.missed = true
+        } else {
+            cell.isEmpty = true
+            cell.hit = true
+            ship.hitCounterHuman += 1
+            if (ship.length === ship.hitCounterHuman) ship.isSinkedByHuman = true // check if the ship is sinked
+            if (this.ships.every(ship => ship.isSinkedByHuman)) alert('You won')
+        }
+        this.AIAttack()
+    },
+    AIAttack() {
+        const randomX = Math.floor(Math.random() * 10)
+        const randomY = Math.floor(Math.random() * 10)
+        const cell = this.grid[randomY].rows[randomX]
+        const ship = this.ships[cell.shipId]
+        if (cell.isEmpty) {
+            cell.missed = true
+        } else {
+            cell.isEmpty = true
+            cell.hit = true
+            ship.hitCounterAI += 1
+            if (ship.length === ship.hitCounterAI) {
+                    ship.isSinkedByAI = true
+                    this.lastAIAttack = {randomX, randomY}
+                } // check if the ship is sinked
+            if (this.ships.every(ship => ship.isSinkedByAI)) alert('You lose')
+        }
+    },
+    addShipIdToGrid(coordinates) {
+        // check if there is already a ship in the selected area
+        for (let i = 0; i < this.selectedShip.length; i++) {
+            if (!this.selectedShip.isVertical && !this.grid[coordinates.y].rows[coordinates.x + i].isEmpty ||
+                this.selectedShip.isVertical && !this.grid[coordinates.y + i].rows[coordinates.x].isEmpty) return
+        }
+
+        for (let i = 0; i < this.selectedShip.length; i++) {
             if (!this.selectedShip.isVertical) {
-                this.grid[coordinates.y].rows[coordinates.x + i].shipId = this.selectedShip.id;
+                this.grid[coordinates.y].rows[coordinates.x + i].isEmpty = false
+                this.grid[coordinates.y].rows[coordinates.x + i].shipId = this.selectedShip.id
             } else {
-                console.log(this.grid[coordinates.y + i].rows[coordinates.x])
-                this.grid[coordinates.y + i].rows[coordinates.x].shipId = this.selectedShip.id;
+                this.grid[coordinates.y + i].rows[coordinates.x].isEmpty = false
+                this.grid[coordinates.y + i].rows[coordinates.x].shipId = this.selectedShip.id
             }
         }
         this.ships.forEach(ship =>
-          ship.id === this.selectedShip.id ? (ship.ready = true) : ""
+          ship.id === this.selectedShip.id ? (ship.isReady = true) : ""
         );
         this.selectedShip = {};
-      }
-    },
-    showingShip() {
-      const cell_list = [...document.querySelectorAll(".grid__cell")];
-      let elements = [];
-
-      if (!this.selectedShip.isVertical) {
-        const selectedCell = Number(event.target.dataset.row);
-        for (let y = 0; y < cell_list.length; y++) {
-          for (let i = 0; i < this.selectedShip.length; i++) {
-            if (
-              cell_list[y].dataset.row == selectedCell + i &&
-              cell_list[y].dataset.column === event.target.dataset.column &&
-              selectedCell + this.selectedShip.length < 11
-            ) {
-                elements.push(cell_list[y])
-            }
-          }
-        }
-      } else {
-        const selectedCell = Number(event.target.dataset.column);
-        for (let y = 0; y < cell_list.length; y++) {
-          for (let i = 0; i < this.selectedShip.length; i++) {
-            if (
-              cell_list[y].dataset.column == selectedCell + i &&
-              cell_list[y].dataset.row === event.target.dataset.row &&
-              selectedCell + this.selectedShip.length < 11
-            ) {
-                elements.push(cell_list[y])
-            }
-          }
-        }
-      }
-      if (!elements.some(el => el.className.includes('grid__cell--placed'))) {
-          elements.forEach(el => el.classList.add("grid__cell--ship"))
-      }
     },
     removeShip() {
-      document
-        .querySelectorAll(".grid__cell")
-        .forEach(grid => grid.classList.remove("grid__cell--ship"));
+        this.grid.forEach(column => column.rows.forEach(row => row.isHovered = false))
+    },
+    moveShipOnGrid() {
+        const x = Number(event.target.dataset.row)
+        const y = Number(event.target.dataset.column)
+        let selectedCell = Number(event.target.dataset.row);
+
+        if (selectedCell + this.selectedShip.length < 11) {
+            if (!this.selectedShip.isVertical) {
+                // check if there is already a ship in the hover area
+                for (let i = 0; i < this.selectedShip.length; i++) {
+                    if (!this.grid[event.target.dataset.column].rows[x + i].isEmpty) return
+                }
+                for (let i = 0; i < this.selectedShip.length; i++) {
+                    if (this.grid[event.target.dataset.column].rows[x + i]) {
+                        this.grid[event.target.dataset.column].rows[x + i].isHovered = true
+                    }
+                }
+            } else {
+                selectedCell = Number(event.target.dataset.column);
+                // check if there is already a ship in the hover area
+                for (let i = 0; i < this.selectedShip.length; i++) {
+                    if (!this.grid[y + i].rows[event.target.dataset.row].isEmpty) return
+                }
+                for (let i = 0; i < this.selectedShip.length; i++) {
+                    if (this.grid[y + i] && selectedCell + this.selectedShip.length < 11) {
+                        this.grid[y + i].rows[event.target.dataset.row].isHovered = true
+                    }
+                }
+            }
+        }
     },
     selectShip(ship) {
       if (this.isPlaying) return;
@@ -111,23 +171,78 @@ export default {
     changeShipDirection() {
       if (!this.selectedShip) return;
       this.selectedShip.isVertical = !this.selectedShip.isVertical;
+    },
+    startGame() {
+        this.createAIGrid()
+        this.placeAIShips()
+    },
+    placeAIShips() {
+        this.ships.forEach(ship => {
+            if (!ship.isAiPlaced) {
+                const randomX = Math.floor(Math.random() * 10)
+                const randomY = Math.floor(Math.random() * 10)
+                const isVertical = Math.round(Math.random())
+
+                if (!isVertical) {
+                    // check if the ship exceeds the grid
+                    if (ship.length + randomX > 10) return this.placeAIShips()
+                    // check if the area is free of ships
+                    for (let i = 0; i < ship.length; i++) {
+                        if (!this.AIGrid[randomY].rows[randomX + i].isEmpty) return this.placeAIShips()
+                    }
+                    for (let i = 0; i < ship.length; i++) {
+                        if (this.AIGrid[randomY].rows[randomX + i]) {
+                            this.AIGrid[randomY].rows[randomX + i].isEmpty = false
+                            this.AIGrid[randomY].rows[randomX + i].shipId = ship.id
+                        }
+                    }
+                } else {
+                    // check if the ship exceeds the grid
+                    if (ship.length + randomY > 10) return this.placeAIShips()
+                    // check if the area is free of ships
+                    for (let i = 0; i < ship.length; i++) {
+                        if (!this.AIGrid[randomY + i].rows[randomX].isEmpty) return this.placeAIShips()
+                    }
+                    for (let i = 0; i < ship.length; i++) {
+                        if (this.AIGrid[randomY + i].rows[randomX]) {
+                            this.AIGrid[randomY + i].rows[randomX].isEmpty = false
+                            this.AIGrid[randomY + i].rows[randomX].shipId = ship.id
+                        }
+                    }
+                }
+                ship.isAiPlaced = true
+            }
+        })
+    },
+    createGrid(grid) {
+        for (let y = 0; y < this.gridSize; y++) {
+          const col = { column: y, rows: [] }
+          for (let x = 0; x < this.gridSize; x++) {
+            col.rows.push({ row: x, hit: false, isEmpty: true, isHovered: false, missed: false})
+          }
+          grid.push(col);
+        }
+    },
+    createAIGrid() {
+        this.createGrid(this.AIGrid)
     }
   },
   created() {
-    for (let y = 0; y < this.gridSize; y++) {
-      const col = { column: y, rows: [] };
-      for (let x = 0; x < this.gridSize; x++) {
-        col.rows.push({ row: x, hit: false, shipId: null });
-      }
-      this.grid.push(col);
-    }
+    this.createGrid(this.grid)
   }
 };
 </script>
 
 <style lang="scss">
+.not-available {
+    opacity: .5;
+    background-color: grey;
+}
 .ships {
-  height: 17rem;
+    width: 20%;
+    &__list {
+        height: 17rem;
+    }
   &__size {
     display: flex;
     align-items: center;
@@ -172,6 +287,10 @@ export default {
 
     &--ship {
       background-color: greenyellow;
+    }
+
+    &--missed {
+        background-color: orange;
     }
 
     &--placed {
