@@ -45,7 +45,7 @@
                             @click="selectShip(ship)"
                             :key="ship.id"
                             class="ships__size"
-                            :class="[`ships__size--${ship.length}`, {'not-available': ship.isSinkedByHuman }]"
+                            :class="[`ships__size--${ship.length}`, {'not-available': ship.human.isSinked }]"
                         >{{ ship.name }}</div>
                     </div>
                 </div>
@@ -61,6 +61,7 @@ export default {
         return {
             gridSize: 10,
             ships: shipsList,
+            firstHit : '',
             grid: [],
             AIGrid: []
         };
@@ -81,11 +82,13 @@ export default {
             const ship = this.ships[cell.shipId];
             if (cell.isEmpty) {
                 cell.missed = true;
+            } else if (cell.hit) {
+                return    
             } else {
                 cell.hit = true;
                 ship.human.hitCounter += 1;
                 // check if the ship is sinked
-                if (ship.length === ship.human.hitCounterHuman)
+                if (ship.length === ship.human.hitCounter)
                     ship.human.isSinked = true;
                 // check all ships are sinked
                 if (this.ships.every(ship => ship.human.isSinked))
@@ -97,20 +100,52 @@ export default {
             let randomX = Math.floor(Math.random() * 10);
             let randomY = Math.floor(Math.random() * 10);
 
-            const cell = this.grid.find(
+            let cell = this.grid.find(
                 cell => cell.x === randomX && cell.y === randomY
-            );
-            if (cell.missed || cell.hit) return this.AIAttack();
-            if (cell.isEmpty) return (cell.missed = true);
+            )
+            
+            if (this.firstHit && this.grid.some(cell => cell.prob === 1)) {
+                const cells = this.grid.filter(cell => cell.prob === 1)
+                const randomCell = Math.floor(Math.random() * cells.length)
+                cell = cells[randomCell]
+                randomX = cell.x
+                randomY = cell.y
+            }
+
+            if (cell.isEmpty && !cell.missed) {
+                cell.prob = 0
+                return cell.missed = true
+            } else if (cell.missed || cell.hit){
+                return this.AIAttack()
+            }
 
             const ship = this.ships[cell.shipId];
-            cell.isEmpty = true;
             cell.hit = true;
             ship.computer.hitCounter += 1;
+                
+                cell.prob = 0
+                this.grid.filter(target => target.y === randomY && (target.x === randomX + 1 || target.x === randomX - 1) ||
+                    target.x === randomX && (target.y === randomY + 1 || target.y === randomY - 1))
+                    .forEach(target => {
+                        if (!target.hit && !target.missed) {
+                            target.prob = 1
+                        }
+                    })
+                if (this.firstHit && this.firstHit.x === cell.x) {
+                    this.grid.filter(target => target.prob === 1 && target.x !== cell.x).forEach(target => target.prob = 0)
+                } else if (this.firstHit && this.firstHit.y === cell.y) {
+                    this.grid.filter(target => target.prob === 1 && target.y !== cell.y).forEach(target => target.prob = 0)
+                }
+                if (!this.firstHit) {
+                    this.firstHit = cell
+                } 
             // check if the ship is sinked and if not record the coordinates and the ship ID for the next attack
             if (ship.length === ship.computer.hitCounter) {
                 ship.computer.isSinked = true;
+                this.firstHit = ''
+                this.grid.forEach(cell => cell.prob = 0)
             }
+            
             if (this.ships.every(ship => ship.computer.isSinked))
                 alert("You lose");
         },
@@ -284,6 +319,11 @@ export default {
         },
         createAIGrid() {
             this.createGrid(this.AIGrid);
+        },
+        resetGame() {
+            this.grid = [],
+            this.AIGrid = [],
+            this.firstHit = ''
         }
     },
     created() {
