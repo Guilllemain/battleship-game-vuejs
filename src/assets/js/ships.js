@@ -3,56 +3,81 @@ const ships = [
     id: 0,
     name: "Destroyer",
     isVertical: false,
+    isSelected: false,
     length: 2,
-    hitCounterAI: 0,
-    hitCounterHuman: 0,
-    isSinkedByAI: false,
-    isSinkedByHuman: false,
-    isReady: false
+    human: {
+      hitCounter: 0,
+      isSinked: false,
+      isReady: false
+    },
+    computer: {
+      hitCounter: 0,
+      isSinked: false,
+    }
   },
   {
     id: 1,
     name: "Submarine",
     isVertical: false,
+    isSelected: false,
     length: 3,
-    hitCounterAI: 0,
-    hitCounterHuman: 0,
-    isSinkedByAI: false,
-    isSinkedByHuman: false,
-    isReady: false
+    human: {
+      hitCounter: 0,
+      isSinked: false,
+      isReady: false
+    },
+    computer: {
+      hitCounter: 0,
+      isSinked: false,
+    }
   },
   {
     id: 2,
     name: "Cruiser",
     isVertical: false,
+    isSelected: false,
     length: 3,
-    hitCounterAI: 0,
-    hitCounterHuman: 0,
-    isSinkedByAI: false,
-    isSinkedByHuman: false,
-    isReady: false
+    human: {
+      hitCounter: 0,
+      isSinked: false,
+      isReady: false
+    },
+    computer: {
+      hitCounter: 0,
+      isSinked: false,
+    }
   },
   {
     id: 3,
     name: "Battleship",
     isVertical: false,
+    isSelected: false,
     length: 4,
-    hitCounterAI: 0,
-    hitCounterHuman: 0,
-    isSinkedByAI: false,
-    isSinkedByHuman: false,
-    isReady: false
+    human: {
+      hitCounter: 0,
+      isSinked: false,
+      isReady: false
+    },
+    computer: {
+      hitCounter: 0,
+      isSinked: false,
+    }
   },
   {
     id: 4,
     name: "Carrier",
     isVertical: false,
+    isSelected: false,
     length: 5,
-    hitCounterAI: 0,
-    hitCounterHuman: 0,
-    isSinkedByAI: false,
-    isSinkedByHuman: false,
-    isReady: false
+    human: {
+      hitCounter: 0,
+      isSinked: false,
+      isReady: false
+    },
+    computer: {
+      hitCounter: 0,
+      isSinked: false,
+    }
   }
 ]
 
