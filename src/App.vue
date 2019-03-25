@@ -1,72 +1,98 @@
 <template>
+    <div>
+        <div class="title">
+            <h1 class="title__main">Battleship</h1>
+            <h3 class="title__small">Place your ships and battle against the computer</h3>
+        </div>
         <div class="container">
             <div class="side side--human">
-
-            <div class="ships">
-                <div class="ships__list">
-                    <div
-                        v-for="ship in ships"
-                        @click="selectShip(ship)"
-                        :key="ship.id"
-                        class="ships__size"
-                        :class="[`ships__size--${ship.length}`, {'not-available': ship.human.isReady || ship.computer.isSinked }]"
-                    >{{ ship.name }}</div>
-                </div>
-                <template v-if="!isPlaying">
-                    <button class="button" :disabled="!selectedShip" :class="{ 'button--disabled': !selectedShip }" @click="changeShipDirection">Change ship direction</button>
-                    <button class="button" :disabled="!isPlayerReady" :class="{ 'button--disabled': !isPlayerReady }" @click="startGame">Start Game</button>
-                    <button class="button" @click="placeShipsRandom">Place ships randomly</button>
-                </template>
-            </div>
-            <div class="grid grid--human" style="margin-right:10rem">
-                <div
-                    v-for="cell in grid" :key="cell.id"
-                    @mouseover="moveShipOnGrid({x: cell.x, y: cell.y})"
-                    @mouseout="removeShip"
-                    @click="addShipIdToGrid({x: cell.x, y: cell.y}, grid)"
-                    class="grid__cell"
-                    :class="{ 'grid__cell--hit': cell.hit, 'grid__cell--placed': !cell.isEmpty && !cell.hit, 'grid__cell--hovering': cell.isHovered, 'grid__cell--missed': cell.missed}"
-                ></div>
-            </div>
-            </div>
-            <transition name="slide">
-                <div v-show="isPlaying && AIGrid.length > 0" class="side side--computer">
-
-                <div class="grid grid--computer">
-                    <div
-                        v-for="cell in AIGrid" :key="cell.id"
-                        @click="attackShip({x: cell.x, y: cell.y})"
-                        class="grid__cell"
-                        :class="{ 'grid__cell--hit': cell.hit, 'grid__cell--missed': cell.missed }"
-                    ></div>
-                </div>
-                <div class="ships">
-                    <div class="ships__list">
+                <div class="aside">
+                    <div class="ships ships--human">
                         <div
                             v-for="ship in ships"
                             @click="selectShip(ship)"
                             :key="ship.id"
-                            class="ships__size"
-                            :class="[`ships__size--${ship.length}`, {'not-available': ship.human.isSinked }]"
+                            class="ships__unit"
+                            :class="[`ships__unit--${ship.length}`, {'ships__unit--unavailable': ship.human.isReady }, { 'ships__unit--sinked': ship.computer.isSinked}, { 'ships__unit--not-hoverable': isPlaying}]"
                         >{{ ship.name }}</div>
                     </div>
+                    <div class="cta" v-if="!isPlaying">
+                        <button
+                            class="cta__button"
+                            :disabled="!selectedShip"
+                            :class="{ 'cta__button--disabled': !selectedShip }"
+                            @click="changeShipDirection"
+                        >Change ship direction</button>
+                        <button
+                            class="cta__button"
+                            :disabled="!isPlayerReady"
+                            :class="{ 'cta__button--disabled': !isPlayerReady }"
+                            @click="startGame"
+                        >Start game</button>
+                        <button class="cta__button" @click="placeShipsRandom">Place ships randomly</button>
+                    </div>
                 </div>
+                <div class="grid grid--human">
+                    <div
+                        v-for="cell in grid"
+                        :key="cell.id"
+                        @mouseover="moveShipOnGrid({x: cell.x, y: cell.y})"
+                        @mouseout="removeShip"
+                        @click="addShipIdToGrid({x: cell.x, y: cell.y}, grid)"
+                        class="grid__cell"
+                        :class="{ 'grid__cell--hit': cell.hit, 'grid__cell--placed': !cell.isEmpty && !cell.hit, 'grid__cell--hovering': cell.isHovered, 'grid__cell--missed': cell.missed}"
+                    ></div>
+                </div>
+            </div>
+            <transition name="slide">
+                <div v-show="isPlaying && AIGrid.length > 0" class="side side--computer">
+                    <div class="grid grid--computer">
+                        <div
+                            v-for="cell in AIGrid"
+                            :key="cell.id"
+                            @click="attackShip({x: cell.x, y: cell.y})"
+                            class="grid__cell"
+                            :class="{ 'grid__cell--hit': cell.hit, 'grid__cell--missed': cell.missed }"
+                        ></div>
+                    </div>
+                    <div class="aside">
+                        <div class="ships ships--computer">
+                            <div
+                                v-for="ship in ships"
+                                @click="selectShip(ship)"
+                                :key="ship.id"
+                                class="ships__unit"
+                                :class="[`ships__unit--${ship.length}`, {'ships__unit--sinked': ship.human.isSinked }, { 'ships__unit--not-hoverable': isPlaying}]"
+                            >{{ ship.name }}</div>
+                        </div>
+                    </div>
                 </div>
             </transition>
-
-
         </div>
+        <modal-component @closeModal="isModalOpen = false" v-show="isModalOpen">
+            <div class="popup">
+                <h3 class="popup__title">{{ popup.title }}</h3>
+                <p class="popup__text">{{ popup.text }}</p>
+                <p class="popup__text">Feel like trying again ?</p>
+                <button @click="newGame" class="popup__cta">New Game</button>
+            </div>
+        </modal-component>
+    </div>
 </template>
 
 <script>
+import ModalComponent from "./components/ModalComponent";
 import shipsList from "./assets/js/ships";
 export default {
+    components: { ModalComponent },
     data() {
         return {
+            isModalOpen: false,
+            popup: {},
             isPlaying: false,
             gridSize: 10,
             ships: shipsList,
-            firstHit : '',
+            firstHit: "",
             grid: [],
             AIGrid: []
         };
@@ -88,7 +114,7 @@ export default {
             if (cell.isEmpty && !cell.missed) {
                 cell.missed = true;
             } else if (cell.hit || cell.missed) {
-                return    
+                return;
             } else {
                 cell.hit = true;
                 ship.human.hitCounter += 1;
@@ -97,73 +123,112 @@ export default {
                     ship.human.isSinked = true;
                 // check all ships are sinked
                 if (this.ships.every(ship => ship.human.isSinked)) {
-                    alert("You won")
-                    this.resetGame()
-                    this.createGrid(this.grid)
+                    this.popup.title = "congratulations!";
+                    this.popup.text = "you won";
+                    return (this.isModalOpen = true);
                 }
             }
             this.AIAttack();
         },
-        AIAttack() {
+        AIAttack(skip = false) {
             let randomX = Math.floor(Math.random() * 10);
             let randomY = Math.floor(Math.random() * 10);
 
             let cell = this.grid.find(
                 cell => cell.x === randomX && cell.y === randomY
-            )
+            );
 
-            if (!this.firstHit) {
-                if (this.grid.filter(target => target.y === randomY && (target.x === randomX + 1 || target.x === randomX - 1) ||
-                    target.x === randomX && (target.y === randomY + 1 || target.y === randomY - 1))
-                    .some(target => target.missed)) return this.AIAttack()
+            if (!this.firstHit && !skip) {
+                // if all cells are surrounded by at least one missed cell, relauch this method but skip this part
+                if (
+                    this.grid
+                        .filter(
+                            target =>
+                                (target.y === randomY &&
+                                    (target.x === randomX + 1 ||
+                                        target.x === randomX - 1)) ||
+                                (target.x === randomX &&
+                                    (target.y === randomY + 1 ||
+                                        target.y === randomY - 1))
+                        )
+                        .every(target => target.missed)
+                )
+                    return this.AIAttack(true);
+                // avoid hitting a cell next to a missed one
+                if (
+                    this.grid
+                        .filter(
+                            target =>
+                                (target.y === randomY &&
+                                    (target.x === randomX + 1 ||
+                                        target.x === randomX - 1)) ||
+                                (target.x === randomX &&
+                                    (target.y === randomY + 1 ||
+                                        target.y === randomY - 1))
+                        )
+                        .some(target => target.missed)
+                )
+                    return this.AIAttack();
             }
-            
+
             if (this.firstHit && this.grid.some(cell => cell.prob === 1)) {
-                const cells = this.grid.filter(cell => cell.prob === 1)
-                const randomCell = Math.floor(Math.random() * cells.length)
-                cell = cells[randomCell]
-                randomX = cell.x
-                randomY = cell.y
+                const cells = this.grid.filter(cell => cell.prob === 1);
+                const randomCell = Math.floor(Math.random() * cells.length);
+                cell = cells[randomCell];
+                randomX = cell.x;
+                randomY = cell.y;
             }
 
             if (cell.isEmpty && !cell.missed) {
-                cell.prob = 0
-                return cell.missed = true
-            } else if (cell.missed || cell.hit){
-                return this.AIAttack()
+                cell.prob = 0;
+                return (cell.missed = true);
+            } else if (cell.missed || cell.hit) {
+                return this.AIAttack();
             }
 
             const ship = this.ships[cell.shipId];
             cell.hit = true;
             ship.computer.hitCounter += 1;
-                
-                cell.prob = 0
-                this.grid.filter(target => target.y === randomY && (target.x === randomX + 1 || target.x === randomX - 1) ||
-                    target.x === randomX && (target.y === randomY + 1 || target.y === randomY - 1))
-                    .forEach(target => {
-                        if (!target.hit && !target.missed) {
-                            target.prob = 1
-                        }
-                    })
-                if (this.firstHit && this.firstHit.x === cell.x) {
-                    this.grid.filter(target => target.prob === 1 && target.x !== cell.x).forEach(target => target.prob = 0)
-                } else if (this.firstHit && this.firstHit.y === cell.y) {
-                    this.grid.filter(target => target.prob === 1 && target.y !== cell.y).forEach(target => target.prob = 0)
-                }
-                if (!this.firstHit) {
-                    this.firstHit = cell
-                } 
+
+            cell.prob = 0;
+            this.grid
+                .filter(
+                    target =>
+                        (target.y === randomY &&
+                            (target.x === randomX + 1 ||
+                                target.x === randomX - 1)) ||
+                        (target.x === randomX &&
+                            (target.y === randomY + 1 ||
+                                target.y === randomY - 1))
+                )
+                .forEach(target => {
+                    if (!target.hit && !target.missed) {
+                        target.prob = 1;
+                    }
+                });
+            if (this.firstHit && this.firstHit.x === cell.x) {
+                this.grid
+                    .filter(target => target.prob === 1 && target.x !== cell.x)
+                    .forEach(target => (target.prob = 0));
+            } else if (this.firstHit && this.firstHit.y === cell.y) {
+                this.grid
+                    .filter(target => target.prob === 1 && target.y !== cell.y)
+                    .forEach(target => (target.prob = 0));
+            }
+            if (!this.firstHit) {
+                this.firstHit = cell;
+            }
             // check if the ship is sinked and if not record the coordinates and the ship ID for the next attack
             if (ship.length === ship.computer.hitCounter) {
                 ship.computer.isSinked = true;
-                this.firstHit = ''
-                this.grid.forEach(cell => cell.prob = 0)
+                this.firstHit = "";
+                this.grid.forEach(cell => (cell.prob = 0));
             }
-            
+
             if (this.ships.every(ship => ship.computer.isSinked)) {
-                alert("You lose")
-                this.resetGame()
-                this.createGrid(this.grid)
+                this.popup.title = "oops!";
+                this.popup.text = "you lost";
+                return (this.isModalOpen = true);
             }
         },
         addShipIdToGrid(coordinates, grid) {
@@ -311,7 +376,7 @@ export default {
                 this.selectedShip.isVertical = !this.selectedShip.isVertical;
         },
         startGame() {
-            this.isPlaying = true
+            this.isPlaying = true;
             this.createAIGrid();
             this.placeAIShips();
         },
@@ -320,8 +385,8 @@ export default {
             this.generateRandomCoordinates(this.AIGrid);
             this.ships.forEach(ship => (ship.human.isReady = false));
         },
-        createGrid(grid) {
-            let id = 1
+        createGrid(grid = this.grid) {
+            let id = 1;
             for (let y = 0; y < this.gridSize; y++) {
                 for (let x = 0; x < this.gridSize; x++) {
                     grid.push({
@@ -339,113 +404,178 @@ export default {
         createAIGrid() {
             this.createGrid(this.AIGrid);
         },
+        newGame() {
+            this.isModalOpen = false;
+            this.resetGame();
+            this.createGrid();
+        },
         resetGame() {
-            this.grid = [],
-            this.AIGrid = [],
-            this.firstHit = '',
-            this.ships.forEach(ship => {
-                ship.human.isSinked = false
-                ship.human.hitCounter = 0
-                ship.human.isReady = false
-                ship.computer.isSinked = false
-                ship.computer.hitCounter = 0
-            })
+            (this.grid = []),
+                (this.AIGrid = []),
+                (this.firstHit = ""),
+                this.ships.forEach(ship => {
+                    ship.human.isSinked = false;
+                    ship.human.hitCounter = 0;
+                    ship.human.isReady = false;
+                    ship.computer.isSinked = false;
+                    ship.computer.hitCounter = 0;
+                });
         }
     },
     created() {
-        this.createGrid(this.grid);
+        this.createGrid();
     }
 };
 </script>
 
 <style lang="scss">
-@import url('https://fonts.googleapis.com/css?family=Roboto:300,400,500,700');
+@import url("https://fonts.googleapis.com/css?family=Roboto:300,400,500,700|Audiowide");
+@import url("https://fonts.googleapis.com/css?family=Audiowide|Bungee+Inline");
 
 * {
     padding: 0;
     margin: 0;
 }
 
-body, html {
+body,
+html {
     height: 100%;
 }
 
 body {
-    font-family: 'Roboto', sans-serif;
-    background-color: #eeeeee;
+    position: relative;
+    font-family: "Roboto", sans-serif;
+    box-sizing: border-box;
+    background-color: #333333;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100%25' height='100%25' viewBox='0 0 800 400'%3E%3Cdefs%3E%3CradialGradient id='a' cx='396' cy='281' r='514' gradientUnits='userSpaceOnUse'%3E%3Cstop offset='0' stop-color='%232685ff'/%3E%3Cstop offset='1' stop-color='%23333333'/%3E%3C/radialGradient%3E%3ClinearGradient id='b' gradientUnits='userSpaceOnUse' x1='400' y1='148' x2='400' y2='333'%3E%3Cstop offset='0' stop-color='%23fdfff2' stop-opacity='0'/%3E%3Cstop offset='1' stop-color='%23fdfff2' stop-opacity='0.5'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect fill='url(%23a)' width='800' height='400'/%3E%3Cg fill-opacity='0.4'%3E%3Ccircle fill='url(%23b)' cx='267.5' cy='61' r='300'/%3E%3Ccircle fill='url(%23b)' cx='532.5' cy='61' r='300'/%3E%3Ccircle fill='url(%23b)' cx='400' cy='30' r='300'/%3E%3C/g%3E%3C/svg%3E");
+    background-attachment: fixed;
+    background-size: cover;
 }
 
-$cellWidth: 3rem;
+$cellWidth: 3vw;
 $blue: #348fda;
 $grey: #a7a7a7;
 $red: #b90000;
+$red-button: #b74242;
 
 .container {
     height: 100%;
     display: flex;
     align-items: center;
-    overflow: hidden;
+}
+
+.title {
+    text-align: center;
+    text-transform: uppercase;
+    padding: 3vw 0;
+
+    &__main {
+        font-family: "Audiowide", cursive;
+        font-size: 2.5rem;
+        margin-bottom: 0.8rem;
+
+        &::after {
+            content: "";
+            display: block;
+            background-color: whitesmoke;
+            height: 1px;
+            width: 30%;
+            margin: auto;
+            opacity: 0.4;
+            margin-top: 0.2rem;
+        }
+    }
+    &__small {
+        font-weight: 300;
+    }
 }
 
 .side {
     display: flex;
+    justify-content: center;
+    flex-basis: 50vw;
+}
 
-    &--human {
-        justify-self: start;
+.cta {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+
+    &__button {
+        font-weight: 500;
+        cursor: pointer;
+        border: none;
+        padding: 1rem 1.5rem;
+        background-color: $red-button;
+        border-radius: 3px;
+        color: whitesmoke;
+        transition: all 0.3s ease-in-out;
+        outline: none;
+        font-size: 0.9rem;
+        opacity: 0.95;
+
+        &:hover:not(&--disabled) {
+            transform: translateY(-2px);
+            background-color: darken($red-button, 10%);
+        }
+
+        &--disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        &:active {
+            transform: translateY(1px);
+        }
+
+        &:not(:last-of-type) {
+            margin-bottom: 0.8rem;
+        }
     }
 }
-
-.not-available {
-    opacity: 0.5;
-    background-color: $grey;
-}
-.button {
-    cursor: pointer;
-    border: none;
-    padding: 1rem 1.5rem;
-    background-color: $blue;
-    border-radius: 3px;
+.aside {
+    display: flex;
+    flex-direction: column;
     color: whitesmoke;
-    font-weight: 700;
-    transition: all .3s ease-in-out;
-    outline: none;
-
-    &:hover:not(&--disabled) {
-        transform: translateY(-2px);
-        background-color: darken($blue, 10%);
-    }
-
-    &--disabled {
-        background-color: lighten($blue, 20%);
-    }
-
-    &:active {
-        transform: translateY(1px);
-    }
-
-    &:not(:last-of-type) {
-        margin-bottom: .8rem;
-    }
 }
+
 .ships {
     display: flex;
     flex-direction: column;
-    align-items: flex-start;
+    font-size: 0.9rem;
 
-    &__list {
-        height: 17rem;
+    &--human {
+        align-items: flex-end;
+        margin-bottom: 1vw;
+        padding-right: 1vw;
     }
-    &__size {
+
+    &--computer {
+        align-items: flex-start;
+        padding-left: 1vw;
+    }
+    &__unit {
+        position: relative;
         display: flex;
         align-items: center;
         justify-content: center;
         margin: 0.2rem 0;
-        cursor: pointer;
         background-color: $grey;
         height: $cellWidth;
         border-radius: $cellWidth;
 
-        &:hover:not(.not-available) {
+        &--unavailable {
+            opacity: 0.5;
+        }
+
+        &--sinked {
+            background-color: $red;
+            text-decoration: line-through;
+        }
+
+        &:hover:not(&--unavailable):not(&--not-hoverable) {
+            cursor: pointer;
             background-color: darken($grey, 10%);
         }
 
@@ -467,17 +597,16 @@ $red: #b90000;
     }
 }
 .grid {
-    width: 30rem;
-    height: 30rem;
+    width: $cellWidth * 10;
+    height: $cellWidth * 10;
     display: grid;
     grid-template-columns: repeat(10, 1fr);
     grid-template-rows: repeat(10, 1fr);
     grid-gap: 3px;
     border-radius: 1%;
-    
 
     &--human {
-        border: 3px $blue solid; 
+        border: 3px $blue solid;
         background-color: $blue;
 
         & .grid__cell {
@@ -486,11 +615,11 @@ $red: #b90000;
     }
 
     &--computer {
-        background-color: lightgray;
-        border: 3px lightgray solid;
+        background-color: $grey;
+        border: 3px $grey solid;
 
         & .grid__cell:hover:not(.grid__cell--hit):not(.grid__cell--missed) {
-            background-color: $grey;
+            background-color: darken($grey, 20%);
         }
     }
 
@@ -503,7 +632,7 @@ $red: #b90000;
         width: 95%;
         height: 95%;
         border-radius: 50%;
-        transition: all .2s ease-in-out;
+        transition: all 0.2s ease-in-out;
 
         &--hit {
             background-color: $red;
@@ -524,8 +653,46 @@ $red: #b90000;
         }
     }
 }
+
+.popup {
+    background-color: whitesmoke;
+    padding: 1.5rem 2rem;
+    border-radius: 0.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    color: darken($grey, 30%);
+
+    &__title {
+        text-transform: uppercase;
+        margin-bottom: 1rem;
+        font-size: 1.5rem;
+        font-weight: 300;
+    }
+
+    &__cta {
+        margin-top: 1.3rem;
+        border: none;
+        background-color: $blue;
+        color: whitesmoke;
+        padding: 0.8rem 1.2rem;
+        border-radius: 0.3rem;
+        text-transform: uppercase;
+        font-size: 1rem;
+        cursor: pointer;
+        transition: all 0.2s ease-in-out;
+        outline: none;
+
+        &:hover {
+            background-color: darken($blue, 10%);
+            transform: translateY(-2px);
+        }
+    }
+}
+
 .slide-enter-active {
-    transition: all .4s ease-in-out;
+    transition: all 0.4s ease-in-out;
 }
 .slide-enter {
     opacity: 0;
