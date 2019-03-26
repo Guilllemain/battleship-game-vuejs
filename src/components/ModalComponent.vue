@@ -1,6 +1,6 @@
 <template>
     <transition name="fade" @after-enter="viewContent = true">
-        <div class="modal" @click="closeModal">
+        <div class="modal" @click="closeModal" v-if="isModalOpen">
             <span class="close__icon">
                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
                     <path
@@ -20,6 +20,12 @@
 
 <script>
 export default {
+    props: {
+        isModalOpen: {
+            type: Boolean,
+            required: true
+        }
+    },
     data() {
         return {
             viewContent: false
@@ -37,7 +43,7 @@ export default {
 };
 </script>
 
-<style lang="scss">
+<style lang="scss" scoped>
 .modal {
     display: flex;
     align-items: center;
