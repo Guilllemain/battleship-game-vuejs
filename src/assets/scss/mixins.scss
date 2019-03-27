@@ -1,0 +1,17 @@
+@mixin hbar($color, $width, $margin-top, $opacity: 1) {
+    content: "";
+    display: block;
+    background-color: $color;
+    height: 1px;
+    width: $width;
+    margin: auto;
+    margin-top: $margin-top;
+    opacity: $opacity;
+}
+
+@mixin flexCenter($align-items: flex-start, $justify-content: flex-start, $direction: row) {
+    display: flex;
+    align-items: $align-items;
+    justify-content: $justify-content;
+    flex-direction: $direction;
+}

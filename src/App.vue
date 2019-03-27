@@ -20,14 +20,14 @@
                         <button
                             class="cta__button"
                             :disabled="!selectedShip"
-                            :class="{ 'cta__button--disabled': !selectedShip }"
+                            :class="{ 'cta__button--disabled': !selectedShip, 'cta__button--animated': selectedShip }"
                             @click="changeShipDirection"
                         >Change ship direction</button>
                         <button class="cta__button" @click="placeShipsRandom">Place ships randomly</button>
                         <button
                             class="cta__button"
                             :disabled="!isPlayerReady"
-                            :class="{ 'cta__button--disabled': !isPlayerReady }"
+                            :class="{ 'cta__button--disabled': !isPlayerReady, 'cta__button--animated': isPlayerReady }"
                             @click="startGame"
                         >Start game</button>
                     </div>
@@ -40,7 +40,7 @@
                         @mouseout="removeShipHoverState"
                         @click="addShipIdToGrid({x: cell.x, y: cell.y}, grid)"
                         class="grid__cell"
-                        :class="{ 'grid__cell--hit': cell.hit, 'grid__cell--placed': !cell.isEmpty && !cell.hit, 'grid__cell--hovering': cell.isHovered, 'grid__cell--missed': cell.missed}"
+                        :class="{ 'grid__cell--hit': cell.hit, 'grid__cell--placed': !cell.isEmpty && !cell.hit, 'grid__cell--highlighted': cell.isHovered, 'grid__cell--missed': cell.missed}"
                     ></div>
                 </div>
             </div>
@@ -157,7 +157,6 @@ export default {
             // check if there is any cells with a potential ship and select one randomly
             if (this.firstTarget && this.grid.some(cell => cell.prob === 1)) {
                 const cells = this.grid.filter(cell => cell.prob === 1);
-                console.log(cells)
                 const randomCell = Math.floor(Math.random() * cells.length);
                 cell = cells[randomCell];
                 randomX = cell.x;
@@ -365,16 +364,17 @@ export default {
             this.createGrid();
         },
         resetGame() {
-            (this.grid = []),
-                (this.AIGrid = []),
-                (this.firstTarget = ""),
-                this.ships.forEach(ship => {
-                    ship.human.isSinked = false;
-                    ship.human.hitCounter = 0;
-                    ship.human.isReady = false;
-                    ship.computer.isSinked = false;
-                    ship.computer.hitCounter = 0;
-                });
+            this.isPlaying = false;
+            this.grid = [];
+            this.AIGrid = [];
+            this.firstTarget = "";
+            this.ships.forEach(ship => {
+                ship.human.isSinked = false;
+                ship.human.hitCounter = 0;
+                ship.human.isReady = false;
+                ship.computer.isSinked = false;
+                ship.computer.hitCounter = 0;
+            });
         }
     },
     created() {
@@ -386,6 +386,9 @@ export default {
 <style lang="scss">
 @import url("https://fonts.googleapis.com/css?family=Roboto:300,400,500|Audiowide");
 @import url("https://fonts.googleapis.com/css?family=Audiowide|Bungee+Inline");
+@import './assets/scss/mixins.scss';
+@import './assets/scss/variables.scss';
+@import './assets/scss/animations.scss';
 
 * {
     padding: 0;
@@ -408,16 +411,9 @@ body {
     background-size: cover;
 }
 
-$cellWidth: 3vw;
-$blue: #348fda;
-$grey: #a7a7a7;
-$red: #b90000;
-$red-button: #b74242;
-
 .container {
     height: 100%;
-    display: flex;
-    align-items: center;
+    @include flexCenter(center);
 }
 
 .title {
@@ -431,14 +427,7 @@ $red-button: #b74242;
         margin-bottom: 0.8rem;
 
         &::after {
-            content: "";
-            display: block;
-            background-color: whitesmoke;
-            height: 1px;
-            width: 30%;
-            margin: auto;
-            opacity: 0.4;
-            margin-top: 0.2rem;
+            @include hbar(whitesmoke, 30%, .2rem, .3);
         }
     }
     &__small {
@@ -447,16 +436,12 @@ $red-button: #b74242;
 }
 
 .side {
-    display: flex;
-    justify-content: center;
+    @include flexCenter(flex-start, center);
     flex-basis: 50vw;
 }
 
 .cta {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
+    @include flexCenter(center, center, column);
 
     &__button {
         font-weight: 500;
@@ -481,6 +466,10 @@ $red-button: #b74242;
             cursor: not-allowed;
         }
 
+        &--animated {
+            animation: scaleUp 1s infinite;
+        }
+
         &:active {
             transform: translateY(1px);
         }
@@ -491,14 +480,12 @@ $red-button: #b74242;
     }
 }
 .aside {
-    display: flex;
-    flex-direction: column;
+    @include flexCenter(center, flex-start, column);
     color: whitesmoke;
 }
 
 .ships {
-    display: flex;
-    flex-direction: column;
+    @include flexCenter(flex-start, flex-start, column);
     font-size: 0.9rem;
 
     &--human {
@@ -513,13 +500,13 @@ $red-button: #b74242;
     }
     &__unit {
         position: relative;
-        display: flex;
-        align-items: center;
-        justify-content: center;
+        @include flexCenter(center, center);
         margin: 0.2rem 0;
-        background-color: $grey;
-        height: $cellWidth;
-        border-radius: $cellWidth;
+        background-color: darken($grey, 20%);
+        height: $cell-width;
+        border-radius: $cell-width;
+        user-select: none;
+        transition: all .2s ease-in-out;
 
         &--unavailable {
             opacity: 0.5;
@@ -533,28 +520,19 @@ $red-button: #b74242;
         &:hover:not(&--unavailable):not(&--not-hoverable) {
             cursor: pointer;
             background-color: darken($grey, 10%);
+            transform: translateX(.2rem);
         }
 
-        &--1 {
-            width: $cellWidth;
-        }
-        &--2 {
-            width: $cellWidth * 2;
-        }
-        &--3 {
-            width: $cellWidth * 3;
-        }
-        &--4 {
-            width: $cellWidth * 4;
-        }
-        &--5 {
-            width: $cellWidth * 5;
+        @for $i from 2 through $ship-count {
+            &--#{$i} {
+                width: $cell-width * $i;
+            }
         }
     }
 }
 .grid {
-    width: $cellWidth * 10;
-    height: $cellWidth * 10;
+    width: $cell-width * 10;
+    height: $cell-width * 10;
     display: grid;
     grid-template-columns: repeat(10, 1fr);
     grid-template-rows: repeat(10, 1fr);
@@ -580,9 +558,7 @@ $red-button: #b74242;
     }
 
     &__cell {
-        display: flex;
-        align-items: center;
-        justify-content: center;
+        @include flexCenter(center, center);
         cursor: pointer;
         background-color: whitesmoke;
         width: 95%;
@@ -595,7 +571,7 @@ $red-button: #b74242;
             cursor: not-allowed;
         }
 
-        &--hovering {
+        &--highlighted {
             background-color: $grey;
         }
 
@@ -614,10 +590,7 @@ $red-button: #b74242;
     background-color: whitesmoke;
     padding: 2rem 3.5rem;
     border-radius: 0.5rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-direction: column;
+    @include flexCenter(center, center, column);
     color: darken($grey, 30%);
 
     &__title {
@@ -627,13 +600,7 @@ $red-button: #b74242;
         font-weight: 300;
 
         &::after {
-            content: "";
-            display: block;
-            background-color: $grey;
-            height: 1px;
-            width: 80%;
-            margin: auto;
-            margin-top: .5rem;
+            @include hbar($grey, 80%, .5rem);
         }
     }
 
@@ -664,4 +631,5 @@ $red-button: #b74242;
     opacity: 0;
     transform: translateX(20vw);
 }
+
 </style>
