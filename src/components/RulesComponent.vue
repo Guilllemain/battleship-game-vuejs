@@ -1,5 +1,5 @@
 <template>
-    <transition-expand>
+    <transition-height-component>
         <div class="row" v-if="showRules">
             <div class="rules">
                 <span class="close__icon" @click="showRules = false">
@@ -56,14 +56,14 @@
                 </ul>
             </div>
         </div>
-    </transition-expand>
+    </transition-height-component>
 </template>
 
 <script>
-import TransitionExpand from "./TransitionExpand";
+import TransitionHeightComponent from "./TransitionHeightComponent";
 
 export default {
-    components: { TransitionExpand },
+    components: { TransitionHeightComponent },
     data() {
         return {
             showRules: true
