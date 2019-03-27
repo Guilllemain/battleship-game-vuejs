@@ -1,5 +1,6 @@
 <template>
     <div>
+        <fork-me-component></fork-me-component>
         <div class="title">
             <h1 class="title__main">Battleship</h1>
             <h3 class="title__small">Place your ships and battle against the computer</h3>
@@ -82,9 +83,10 @@
 
 <script>
 import ModalComponent from "./components/ModalComponent";
+import ForkMeComponent from "./components/ForkMeComponent";
 import shipsList from "./assets/js/ships";
 export default {
-    components: { ModalComponent },
+    components: { ModalComponent, ForkMeComponent },
     data() {
         return {
             isModalOpen: false,
@@ -129,7 +131,9 @@ export default {
                     return (this.isModalOpen = true);
                 }
             }
-            this.AIAttack();
+            setTimeout(() => {
+                this.AIAttack();
+            }, 200);
         },
         AIAttack(skip = false) {
             let randomX = Math.floor(Math.random() * 10);

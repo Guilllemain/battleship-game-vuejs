@@ -1,12 +1,12 @@
-# battleship
+# Battleship Game
+
+A little battleship game to play against the computer.
+Demo here : https://competent-lamarr-455437.netlify.com/
 
 ## Project setup
+
 ```
 npm install
-```
-
-### Compiles and hot-reloads for development
-```
 npm run serve
 ```
 
@@ -15,15 +15,4 @@ npm run serve
 npm run build
 ```
 
-### Run your tests
-```
-npm run test
-```
-
-### Lints and fixes files
-```
-npm run lint
-```
-
-### Customize configuration
-See [Configuration Reference](https://cli.vuejs.org/config/).
+If you find any bug, feel free to contact me or send me a request.
