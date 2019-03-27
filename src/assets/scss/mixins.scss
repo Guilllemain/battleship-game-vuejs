@@ -15,3 +15,21 @@
     justify-content: $justify-content;
     flex-direction: $direction;
 }
+
+@mixin screen($breakpoint) {
+	@if $breakpoint == xs {
+		@media only screen and (max-width: 37.5em) { @content }; //600px
+	}
+	@if $breakpoint == small {
+		@media only screen and (max-width: 62.5em) { @content }; //1000px
+	}
+	@if $breakpoint == medium {
+		@media only screen and (max-width: 75em) { @content }; //1200px
+	}
+	@if $breakpoint == large {
+		@media only screen and (max-width: 94em) { @content }; //1500px
+	}
+	@if $breakpoint == xl {
+		@media only screen and (min-width: 112.5em) { @content }; //1800px
+	}
+}

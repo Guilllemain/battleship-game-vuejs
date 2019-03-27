@@ -5,6 +5,7 @@
             <h1 class="title__main">Battleship</h1>
             <h3 class="title__small">Place your ships and battle against the computer</h3>
         </div>
+        <rules-component></rules-component>
         <div class="container">
             <div class="side side--human">
                 <div class="aside">
@@ -84,9 +85,10 @@
 <script>
 import ModalComponent from "./components/ModalComponent";
 import ForkMeComponent from "./components/ForkMeComponent";
+import RulesComponent from "./components/RulesComponent";
 import shipsList from "./assets/js/ships";
 export default {
-    components: { ModalComponent, ForkMeComponent },
+    components: { ModalComponent, ForkMeComponent, RulesComponent },
     data() {
         return {
             isModalOpen: false,
@@ -95,7 +97,7 @@ export default {
             gridSize: 10,
             ships: shipsList,
             firstTarget: "",
-            secondTarget: '',
+            secondTarget: "",
             grid: [],
             AIGrid: []
         };
@@ -127,7 +129,7 @@ export default {
                 // check all ships are sinked
                 if (this.ships.every(ship => ship.human.isSinked)) {
                     this.popup.title = "congratulations!";
-                    this.popup.text = "you won";
+                    this.popup.text = "You won";
                     return (this.isModalOpen = true);
                 }
             }
@@ -146,14 +148,16 @@ export default {
             if (!this.firstTarget && !skip) {
                 // if all cells are surrounded by at least one missed cell, relaunch this method but skip this part
                 if (
-                    this.getAdjacentCells(randomX, randomY)
-                        .every(target => target.missed)
+                    this.getAdjacentCells(randomX, randomY).every(
+                        target => target.missed
+                    )
                 )
                     return this.AIAttack(true);
                 // avoid hitting a cell next to a missed one
                 if (
-                    this.getAdjacentCells(randomX, randomY)
-                        .some(target => target.missed)
+                    this.getAdjacentCells(randomX, randomY).some(
+                        target => target.missed
+                    )
                 )
                     return this.AIAttack();
             }
@@ -179,33 +183,35 @@ export default {
             ship.computer.hitCounter += 1;
 
             // if the computer hits another ship next to the first target, save the coordinates
-            if(this.firstTarget && this.firstTarget.shipId !== cell.shipId) {
-                this.secondTarget = cell
+            if (this.firstTarget && this.firstTarget.shipId !== cell.shipId) {
+                this.secondTarget = cell;
             }
 
             cell.prob = 0;
-            this.getAdjacentCells(randomX, randomY)
-                .forEach(target => {
-                    if (!target.hit && !target.missed) {
-                        target.prob = 1;
-                    }
-                })
+            this.getAdjacentCells(randomX, randomY).forEach(target => {
+                if (!target.hit && !target.missed) {
+                    target.prob = 1;
+                }
+            });
             if (this.firstTarget && cell.shipId !== this.firstTarget.shipId) {
-                this.getAdjacentCells(randomX, randomY)
-                .forEach(target => {
+                this.getAdjacentCells(randomX, randomY).forEach(target => {
                     if (!target.hit && !target.missed) {
                         target.prob = 2;
                     }
-                })
+                });
             }
             if (this.firstTarget && !this.secondTarget) {
                 if (this.firstTarget.x === cell.x) {
                     this.grid
-                        .filter(target => target.prob === 1 && target.x !== cell.x)
+                        .filter(
+                            target => target.prob === 1 && target.x !== cell.x
+                        )
                         .forEach(target => (target.prob = 0));
                 } else if (this.firstTarget.y === cell.y) {
                     this.grid
-                        .filter(target => target.prob === 1 && target.y !== cell.y)
+                        .filter(
+                            target => target.prob === 1 && target.y !== cell.y
+                        )
                         .forEach(target => (target.prob = 0));
                 }
             }
@@ -218,10 +224,14 @@ export default {
                 ship.computer.isSinked = true;
                 // if there is no second target, the next attack will be a random one
                 if (this.secondTarget) {
-                    this.firstTarget = this.secondTarget
-                    this.secondTarget = ''
-                    this.grid.filter(cell => cell.prob === 1).forEach(cell => cell.prob = 0)
-                    this.grid.filter(cell => cell.prob === 2).forEach(cell => cell.prob = 1)
+                    this.firstTarget = this.secondTarget;
+                    this.secondTarget = "";
+                    this.grid
+                        .filter(cell => cell.prob === 1)
+                        .forEach(cell => (cell.prob = 0));
+                    this.grid
+                        .filter(cell => cell.prob === 2)
+                        .forEach(cell => (cell.prob = 1));
                 } else {
                     this.firstTarget = "";
                     this.grid.forEach(cell => (cell.prob = 0));
@@ -236,31 +246,30 @@ export default {
             }
         },
         getAdjacentCells(x, y) {
-            return this.grid
-                        .filter(
-                            target =>
-                                (target.y === y &&
-                                    (target.x === x + 1 ||
-                                        target.x === x - 1)) ||
-                                (target.x === x &&
-                                    (target.y === y + 1 ||
-                                        target.y === y - 1))
-                        )
+            return this.grid.filter(
+                target =>
+                    (target.y === y &&
+                        (target.x === x + 1 || target.x === x - 1)) ||
+                    (target.x === x &&
+                        (target.y === y + 1 || target.y === y - 1))
+            );
         },
         addShipIdToGrid(coordinates, grid) {
             if (!this.selectedShip) return;
 
             //   check if the ship exceeds the grid limit
-            if (this.isShipTooLong(coordinates, this.selectedShip)) return
+            if (this.isShipTooLong(coordinates, this.selectedShip)) return;
 
-            // check if there is already a ship in the selected area     
-            if (this.areCellsEmpty(grid, coordinates, this.selectedShip)) return;
+            // check if there is already a ship in the selected area
+            if (this.areCellsEmpty(grid, coordinates, this.selectedShip))
+                return;
 
-            this.getSelectedCells(grid, coordinates, this.selectedShip)
-                .forEach(cell => {
+            this.getSelectedCells(grid, coordinates, this.selectedShip).forEach(
+                cell => {
                     cell.isEmpty = false;
                     cell.shipId = this.selectedShip.id;
-                });
+                }
+            );
             this.ships[this.selectedShip.id].human.isReady = true;
             this.selectedShip.isSelected = false;
         },
@@ -271,33 +280,49 @@ export default {
             if (!this.selectedShip) return;
 
             //   check if the ship exceeds the grid limit
-            if (this.isShipTooLong(coordinates, this.selectedShip)) return
-                
-            // check if there is already a ship in the hover area
-            if (this.areCellsEmpty(this.grid, coordinates, this.selectedShip)) return
+            if (this.isShipTooLong(coordinates, this.selectedShip)) return;
 
-            this.getSelectedCells(this.grid, coordinates, this.selectedShip)
-                .forEach(cell => (cell.isHovered = true));
-            
+            // check if there is already a ship in the hover area
+            if (this.areCellsEmpty(this.grid, coordinates, this.selectedShip))
+                return;
+
+            this.getSelectedCells(
+                this.grid,
+                coordinates,
+                this.selectedShip
+            ).forEach(cell => (cell.isHovered = true));
         },
         isShipTooLong(coordinates, ship) {
-            return (!ship.isVertical ? coordinates.x : coordinates.y) + ship.length > 10
+            return (
+                (!ship.isVertical ? coordinates.x : coordinates.y) +
+                    ship.length >
+                10
+            );
         },
         areCellsEmpty(grid, coordinates, ship) {
-            return grid.some(cell =>
-                    (!ship.isVertical ? cell.y : cell.x) === (!ship.isVertical ? coordinates.y : coordinates.x) &&
-                    (!ship.isVertical ? cell.x : cell.y) >= (!ship.isVertical ? coordinates.x : coordinates.y) &&
-                    (!ship.isVertical ? cell.x : cell.y) < (!ship.isVertical ? coordinates.x : coordinates.y) + ship.length &&
+            return grid.some(
+                cell =>
+                    (!ship.isVertical ? cell.y : cell.x) ===
+                        (!ship.isVertical ? coordinates.y : coordinates.x) &&
+                    (!ship.isVertical ? cell.x : cell.y) >=
+                        (!ship.isVertical ? coordinates.x : coordinates.y) &&
+                    (!ship.isVertical ? cell.x : cell.y) <
+                        (!ship.isVertical ? coordinates.x : coordinates.y) +
+                            ship.length &&
                     !cell.isEmpty
-            )
+            );
         },
         getSelectedCells(grid, coordinates, ship) {
             return grid.filter(
                 cell =>
-                    (!ship.isVertical ? cell.y : cell.x) === (!ship.isVertical ? coordinates.y : coordinates.x) &&
-                    (!ship.isVertical ? cell.x : cell.y) >= (!ship.isVertical ? coordinates.x : coordinates.y) &&
-                    (!ship.isVertical ? cell.x : cell.y) < (!ship.isVertical ? coordinates.x : coordinates.y) + ship.length
-            )
+                    (!ship.isVertical ? cell.y : cell.x) ===
+                        (!ship.isVertical ? coordinates.y : coordinates.x) &&
+                    (!ship.isVertical ? cell.x : cell.y) >=
+                        (!ship.isVertical ? coordinates.x : coordinates.y) &&
+                    (!ship.isVertical ? cell.x : cell.y) <
+                        (!ship.isVertical ? coordinates.x : coordinates.y) +
+                            ship.length
+            );
         },
         placeShipsRandom() {
             this.grid.forEach(cell => (cell.isEmpty = true));
@@ -325,7 +350,7 @@ export default {
         selectShip(ship) {
             if (this.isPlaying) return;
             if (!ship.human.isReady) {
-                this.ships.forEach(ship => ship.isSelected = false)
+                this.ships.forEach(ship => (ship.isSelected = false));
                 ship.isSelected = true;
             }
         },
@@ -390,9 +415,9 @@ export default {
 <style lang="scss">
 @import url("https://fonts.googleapis.com/css?family=Roboto:300,400,500|Audiowide");
 @import url("https://fonts.googleapis.com/css?family=Audiowide|Bungee+Inline");
-@import './assets/scss/mixins.scss';
-@import './assets/scss/variables.scss';
-@import './assets/scss/animations.scss';
+@import "./assets/scss/mixins.scss";
+@import "./assets/scss/variables.scss";
+@import "./assets/scss/animations.scss";
 
 * {
     padding: 0;
@@ -418,30 +443,56 @@ body {
 .container {
     height: 100%;
     @include flexCenter(center);
+    @include screen(small) {
+        flex-direction: column;
+    }
 }
 
 .title {
     text-align: center;
     text-transform: uppercase;
-    padding: 3vw 0;
+    padding: 2.5vw 0;
 
     &__main {
         font-family: "Audiowide", cursive;
         font-size: 2.5rem;
         margin-bottom: 0.8rem;
 
+        @include screen(medium) {
+            font-size: 2.2rem;
+        }
+
         &::after {
-            @include hbar(whitesmoke, 30%, .2rem, .3);
+            @include hbar(whitesmoke, 30%, 0.2rem, 0.3);
         }
     }
     &__small {
         font-weight: 300;
+
+        @include screen(medium) {
+            font-size: 1rem;
+        }
     }
 }
 
 .side {
+    margin-top: 2.5vw;
     @include flexCenter(flex-start, center);
     flex-basis: 50vw;
+    @include screen(small) {
+        flex-basis: 0;
+        margin-right: 5vw;
+    }
+    &--computer {
+        @include screen(small) {
+            flex-direction: row-reverse;
+        }
+    }
+    &--human {
+        @include screen(small) {
+            margin-bottom: 1rem;
+        }
+    }
 }
 
 .cta {
@@ -459,6 +510,22 @@ body {
         outline: none;
         font-size: 0.9rem;
         opacity: 0.95;
+
+        @include screen(large) {
+            padding: 0.8rem 0.6rem;
+            border-radius: 2px;
+            font-size: 0.8rem;
+        }
+
+        @include screen(medium) {
+            padding: 0.5rem 0.3rem;
+            font-size: 0.7rem;
+        }
+
+        @include screen(small) {
+            padding: 0.8rem 0.6rem;
+            font-size: 0.8rem;
+        }
 
         &:hover:not(&--disabled) {
             transform: translateY(-2px);
@@ -480,6 +547,14 @@ body {
 
         &:not(:last-of-type) {
             margin-bottom: 0.8rem;
+
+            @include screen(large) {
+                margin-bottom: 0.6rem;
+            }
+
+            @include screen(medium) {
+                margin-bottom: 0.5rem;
+            }
         }
     }
 }
@@ -501,6 +576,11 @@ body {
     &--computer {
         align-items: flex-start;
         padding-left: 1vw;
+        @include screen(small) {
+            align-items: flex-end;
+            padding-right: 1vw;
+            padding-left: 0;
+        }
     }
     &__unit {
         position: relative;
@@ -508,9 +588,21 @@ body {
         margin: 0.2rem 0;
         background-color: darken($grey, 20%);
         height: $cell-width;
-        border-radius: $cell-width;
+        border-radius: 1rem;
         user-select: none;
-        transition: all .2s ease-in-out;
+        transition: all 0.2s ease-in-out;
+
+        @include screen(small) {
+            height: 4vw;
+        }
+
+        @include screen(large) {
+            font-size: 0.85rem;
+        }
+
+        @include screen(medium) {
+            font-size: 0.75rem;
+        }
 
         &--unavailable {
             opacity: 0.5;
@@ -524,12 +616,15 @@ body {
         &:hover:not(&--unavailable):not(&--not-hoverable) {
             cursor: pointer;
             background-color: darken($grey, 10%);
-            transform: translateX(.2rem);
+            transform: translateX(0.2rem);
         }
 
         @for $i from 2 through $ship-count {
             &--#{$i} {
                 width: $cell-width * $i;
+                @include screen(small) {
+                    width: 4vw * $i;
+                }
             }
         }
     }
@@ -542,6 +637,12 @@ body {
     grid-template-rows: repeat(10, 1fr);
     grid-gap: 3px;
     border-radius: 1%;
+
+    @include screen(small) {
+        width: 4vw * 10;
+        height: 4vw * 10;
+        margin-left: 1rem;
+    }
 
     &--human {
         border: 3px $blue solid;
@@ -604,7 +705,7 @@ body {
         font-weight: 300;
 
         &::after {
-            @include hbar($grey, 80%, .5rem);
+            @include hbar($grey, 80%, 0.5rem);
         }
     }
 
@@ -629,11 +730,9 @@ body {
 }
 
 .slide-enter-active {
-    transition: all 0.4s ease-in-out;
+    animation: slideRight 0.8s;
+    @include screen(small) {
+        animation: slideUp 0.8s;
+    }
 }
-.slide-enter {
-    opacity: 0;
-    transform: translateX(20vw);
-}
-
 </style>
