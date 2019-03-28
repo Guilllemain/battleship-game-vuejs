@@ -6,6 +6,9 @@
             <h3 class="title__small">Place your ships and battle against the computer</h3>
         </div>
         <rules-component></rules-component>
+        <div class="row" v-if="gameOver">
+            <button @click="newGame" class="new-game">New Game</button>
+        </div>
         <div class="container">
             <div class="side side--human">
                 <div class="aside">
@@ -94,6 +97,7 @@ export default {
             isModalOpen: false,
             popup: {},
             isPlaying: false,
+            gameOver: false,
             gridSize: 10,
             ships: shipsList,
             firstTarget: "",
@@ -112,6 +116,7 @@ export default {
     },
     methods: {
         attackShip(coordinates) {
+            if (this.gameOver) return
             const cell = this.AIGrid.find(
                 cell => cell.x === coordinates.x && cell.y === coordinates.y
             );
@@ -130,6 +135,7 @@ export default {
                 }
                 // check if all ships are sinked
                 if (this.ships.every(ship => ship.human.isSinked)) {
+                    this.gameOver = true
                     this.popup.title = "congratulations!";
                     this.popup.text = "You won";
                     return (this.isModalOpen = true);
@@ -140,6 +146,8 @@ export default {
             }, 200);
         },
         AIAttack(skip = false) {
+            if (this.gameOver) return
+
             let randomX = Math.floor(Math.random() * 10);
             let randomY = Math.floor(Math.random() * 10);
 
@@ -243,6 +251,7 @@ export default {
 
             // check if all ships are sinked then display the modal
             if (this.ships.every(ship => ship.computer.isSinked)) {
+                this.gameOver = true
                 this.popup.title = "oops!";
                 this.popup.text = "You lost";
                 return (this.isModalOpen = true);
@@ -392,6 +401,7 @@ export default {
         },
         newGame() {
             this.isModalOpen = false;
+            this.gameOver = false;
             this.resetGame();
             this.createGrid();
         },
@@ -449,6 +459,7 @@ body {
     position: relative;
     font-family: "Roboto", sans-serif;
     box-sizing: border-box;
+    overflow-x: hidden;
     background-color: #333333;
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100%25' height='100%25' viewBox='0 0 800 400'%3E%3Cdefs%3E%3CradialGradient id='a' cx='396' cy='281' r='514' gradientUnits='userSpaceOnUse'%3E%3Cstop offset='0' stop-color='%232685ff'/%3E%3Cstop offset='1' stop-color='%23333333'/%3E%3C/radialGradient%3E%3ClinearGradient id='b' gradientUnits='userSpaceOnUse' x1='400' y1='148' x2='400' y2='333'%3E%3Cstop offset='0' stop-color='%23fdfff2' stop-opacity='0'/%3E%3Cstop offset='1' stop-color='%23fdfff2' stop-opacity='0.5'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect fill='url(%23a)' width='800' height='400'/%3E%3Cg fill-opacity='0.4'%3E%3Ccircle fill='url(%23b)' cx='267.5' cy='61' r='300'/%3E%3Ccircle fill='url(%23b)' cx='532.5' cy='61' r='300'/%3E%3Ccircle fill='url(%23b)' cx='400' cy='30' r='300'/%3E%3C/g%3E%3C/svg%3E");
     background-attachment: fixed;
@@ -461,6 +472,10 @@ body {
     @include screen(small) {
         flex-direction: column;
     }
+}
+
+.row {
+    @include flexCenter(center, center);
 }
 
 .title {
@@ -786,6 +801,28 @@ body {
     animation: slideRight 0.8s;
     @include screen(small) {
         animation: slideUp 0.8s;
+    }
+}
+.new-game {
+    margin-top: 1rem;
+    color: whitesmoke;
+    letter-spacing: .1rem;
+    font-size: 1rem;
+    border: none;
+    padding: 1rem .8rem;
+    text-transform: uppercase;
+    border-radius: .3rem;
+    background-color: $blue;
+    transition: all .3s ease-in-out;
+    outline: none;
+    cursor: pointer;
+
+    &:hover {
+        transform: scale(1.05) translateY(.3rem);
+    }
+
+    &:active {
+        transform: scale(.95) translateY(-.3rem);
     }
 }
 </style>

@@ -1,5 +1,4 @@
-| --- | --- |
-| **Netlify**** | | [![Netlify Status](https://api.netlify.com/api/v1/badges/1fe48613-a711-4cfa-8a64-cbae986606f0/deploy-status)](https://app.netlify.com/sites/competent-lamarr-455437/deploys) |
+[![Netlify Status](https://api.netlify.com/api/v1/badges/1fe48613-a711-4cfa-8a64-cbae986606f0/deploy-status)](https://app.netlify.com/sites/competent-lamarr-455437/deploys)
 
 # Battleship Game
 

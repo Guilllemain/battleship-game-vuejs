@@ -76,10 +76,6 @@ export default {
 <style lang="scss" scoped>
 @import "../assets/scss/mixins.scss";
 
-.row {
-    @include flexCenter(center, center);
-}
-
 .close {
     &__icon {
     cursor: pointer;
