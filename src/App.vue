@@ -419,6 +419,19 @@ export default {
 @import "./assets/scss/variables.scss";
 @import "./assets/scss/animations.scss";
 
+:root {
+    --cell-width: 2.5vw;
+    @include screen(medium) {
+        --cell-width: 3vw;
+    }
+    @include screen(small) {
+        --cell-width: 4vw;
+    }
+    @include screen(xs) {
+        --cell-width: 6vw;
+    }
+}
+
 * {
     padding: 0;
     margin: 0;
@@ -462,8 +475,19 @@ body {
             font-size: 2.2rem;
         }
 
+        @include screen (xs) {
+            font-size: 1.8rem;
+        }
+
+        @include screen (xxs) {
+            font-size: 1.6rem;
+        }
+
         &::after {
             @include hbar(whitesmoke, 30%, 0.2rem, 0.3);
+            @include screen (xs) {
+                @include hbar(whitesmoke, 30%, .5rem, 0.3);
+            }
         }
     }
     &__small {
@@ -471,6 +495,14 @@ body {
 
         @include screen(medium) {
             font-size: 1rem;
+        }
+
+        @include screen (xs) {
+            font-size: .9rem;
+        }
+        @include screen (xxs) {
+            font-size: .8rem;
+            margin-bottom: .5rem;
         }
     }
 }
@@ -481,7 +513,6 @@ body {
     flex-basis: 50vw;
     @include screen(small) {
         flex-basis: 0;
-        margin-right: 5vw;
     }
     &--computer {
         @include screen(small) {
@@ -523,8 +554,20 @@ body {
         }
 
         @include screen(small) {
-            padding: 0.8rem 0.6rem;
+            padding: 0.6rem 0.5rem;
             font-size: 0.8rem;
+            width: 16vw;
+        }
+
+        @include screen(xs) {
+            padding: 0.5rem 0.5rem;
+            font-size: 0.7rem;
+            width: 16vw;
+        }
+
+        @include screen(xxs) {
+            padding: 0.5rem 0.3rem;
+            width: 20vw;
         }
 
         &:hover:not(&--disabled) {
@@ -587,14 +630,10 @@ body {
         @include flexCenter(center, center);
         margin: 0.2rem 0;
         background-color: darken($grey, 20%);
-        height: $cell-width;
+        height: var(--cell-width);
         border-radius: 1rem;
         user-select: none;
         transition: all 0.2s ease-in-out;
-
-        @include screen(small) {
-            height: 4vw;
-        }
 
         @include screen(large) {
             font-size: 0.85rem;
@@ -621,17 +660,26 @@ body {
 
         @for $i from 2 through $ship-count {
             &--#{$i} {
-                width: $cell-width * $i;
+                width: 2.5vw * $i;
+                @include screen (medium) {
+                    width: 3vw * $i;
+                }
                 @include screen(small) {
-                    width: 4vw * $i;
+                    width: 10vw;
+                }
+                @include screen(xs) {
+                    width: 14vw;
+                }
+                @include screen(xxs) {
+                    width: 18vw;
                 }
             }
         }
     }
 }
 .grid {
-    width: $cell-width * 10;
-    height: $cell-width * 10;
+    width: calc(var(--cell-width) * 10);
+    height: calc(var(--cell-width) * 10);
     display: grid;
     grid-template-columns: repeat(10, 1fr);
     grid-template-rows: repeat(10, 1fr);
@@ -639,8 +687,6 @@ body {
     border-radius: 1%;
 
     @include screen(small) {
-        width: 4vw * 10;
-        height: 4vw * 10;
         margin-left: 1rem;
     }
 

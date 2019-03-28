@@ -4,9 +4,8 @@
             <div class="rules">
                 <span class="close__icon" @click="showRules = false">
                     <svg
+                        class="close__svg"
                         xmlns="http://www.w3.org/2000/svg"
-                        width="24"
-                        height="24"
                         viewBox="0 0 24 24"
                     >
                         <path
@@ -18,15 +17,17 @@
                 <h4 class="rules__title">Rules</h4>
                 <ul class="rules__list">
                     <li class="rules__item">
-                        <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            width="20"
-                            height="20"
-                            viewBox="0 0 26 26"
-                        >
-                            <path fill="none" d="M0 0h24v24H0V0z"></path>
-                            <path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.41z"></path>
-                        </svg>
+                        <span>
+                            <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                width="20"
+                                height="20"
+                                viewBox="0 0 26 26"
+                            >
+                                <path fill="none" d="M0 0h24v24H0V0z"></path>
+                                <path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.41z"></path>
+                            </svg>
+                        </span>
                         <span>Place each of your ship on the grid by clicking on it or use the auto placement button</span>
                     </li>
                     <li class="rules__item">
@@ -79,7 +80,8 @@ export default {
     @include flexCenter(center, center);
 }
 
-.close__icon {
+.close {
+    &__icon {
     cursor: pointer;
     position: absolute;
     top: 0.5rem;
@@ -87,14 +89,31 @@ export default {
     opacity: 0.8;
     color: black;
 
+        &:hover {
+            transform: scale(1.1);
+            opacity: 1;
+        }
+    }
+
+    &__svg {
+        width: 22px;
+        height: 22px;
+
+        @include screen (medium) {
+            width: 18px;
+            height: 18px;
+        }
+        @include screen (xs) {
+            width: 15px;
+            height: 15px;
+        }
+    }
+
     & svg {
         fill: currentColor;
     }
 
-    &:hover {
-        transform: scale(1.1);
-        opacity: 1;
-    }
+    
 }
 
 .rules {
@@ -116,6 +135,10 @@ export default {
         padding: 0.6rem 0.8rem;
     }
 
+    @include screen(xxs) {
+        width: 80vw;
+    }
+
     &__title {
         font-weight: 400;
         font-size: 1.2rem;
@@ -127,6 +150,12 @@ export default {
             font-size: 1rem;
             margin-bottom: 0.5rem;
         }
+
+        @include screen(medium) {
+            font-size: .9rem;
+            margin-bottom: .3rem;
+        }
+        
     }
 
     &__list {

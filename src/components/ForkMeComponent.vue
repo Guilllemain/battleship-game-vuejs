@@ -1,12 +1,11 @@
 <template>
     <a
         href="https://github.com/Guilllemain/battleship-game-vuejs"
-        class="github-corner"
+        class="github__corner"
         aria-label="View source on GitHub"
     >
         <svg
-            width="80"
-            height="80"
+            class="github__icon"
             viewBox="0 0 250 250"
             style="fill:#151513; color:#fff; position: absolute; top: 0; border: 0; right: 0;"
             aria-hidden="true"
@@ -27,10 +26,28 @@
     </a>
 </template>
 
-<style scoped>
-.github-corner:hover .octo-arm {
+<style lang="scss" scoped>
+@import '../assets/scss/mixins.scss';
+
+.github__corner:hover .octo-arm {
     animation: octocat-wave 560ms ease-in-out;
 }
+
+.github__icon {
+    width: 80px;
+    height: 80px;
+
+    @include screen (small) {
+        width: 70px;
+        height: 70px;
+    }
+
+    @include screen (xxs) {
+        width: 50px;
+        height: 50px;
+    }
+}
+
 @keyframes octocat-wave {
     0%,
     100% {
@@ -46,10 +63,10 @@
     }
 }
 @media (max-width: 500px) {
-    .github-corner:hover .octo-arm {
+    .github__corner:hover .octo-arm {
         animation: none;
     }
-    .github-corner .octo-arm {
+    .github__corner .octo-arm {
         animation: octocat-wave 560ms ease-in-out;
     }
 }
