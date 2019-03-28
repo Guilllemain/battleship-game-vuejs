@@ -42,7 +42,7 @@
                         @mouseout="removeShipHoverState"
                         @click="addShipIdToGrid({x: cell.x, y: cell.y}, grid)"
                         class="grid__cell"
-                        :class="{ 'grid__cell--hit': cell.hit, 'grid__cell--placed': !cell.isEmpty && !cell.hit, 'grid__cell--highlighted': cell.isHovered, 'grid__cell--missed': cell.missed}"
+                        :class="{ 'grid__cell--hit': cell.hit, 'grid__cell--placed': !cell.isEmpty && !cell.hit, 'grid__cell--highlighted': cell.isHovered, 'grid__cell--missed': cell.missed, 'grid__cell--sinked': cell.isSinked}"
                     ></div>
                 </div>
             </div>
@@ -54,7 +54,7 @@
                             :key="cell.id"
                             @click="attackShip({x: cell.x, y: cell.y})"
                             class="grid__cell"
-                            :class="{ 'grid__cell--hit': cell.hit, 'grid__cell--missed': cell.missed }"
+                            :class="{ 'grid__cell--hit': cell.hit, 'grid__cell--missed': cell.missed, 'grid__cell--sinked': cell.isSinked }"
                         ></div>
                     </div>
                     <div class="aside">
@@ -124,9 +124,11 @@ export default {
                 cell.hit = true;
                 ship.human.hitCounter += 1;
                 // check if the ship is sinked
-                if (ship.length === ship.human.hitCounter)
+                if (ship.length === ship.human.hitCounter) {
                     ship.human.isSinked = true;
-                // check all ships are sinked
+                    this.AIGrid.filter(cell => cell.shipId === ship.id).forEach(cell => cell.isSinked = true)
+                }
+                // check if all ships are sinked
                 if (this.ships.every(ship => ship.human.isSinked)) {
                     this.popup.title = "congratulations!";
                     this.popup.text = "You won";
@@ -222,6 +224,7 @@ export default {
             // check if the ship is sinked
             if (ship.length === ship.computer.hitCounter) {
                 ship.computer.isSinked = true;
+                this.grid.filter(cell => cell.shipId === ship.id).forEach(cell => cell.isSinked = true)
                 // if there is no second target, the next attack will be a random one
                 if (this.secondTarget) {
                     this.firstTarget = this.secondTarget;
@@ -446,7 +449,6 @@ body {
     position: relative;
     font-family: "Roboto", sans-serif;
     box-sizing: border-box;
-    overflow-x: hidden;
     background-color: #333333;
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100%25' height='100%25' viewBox='0 0 800 400'%3E%3Cdefs%3E%3CradialGradient id='a' cx='396' cy='281' r='514' gradientUnits='userSpaceOnUse'%3E%3Cstop offset='0' stop-color='%232685ff'/%3E%3Cstop offset='1' stop-color='%23333333'/%3E%3C/radialGradient%3E%3ClinearGradient id='b' gradientUnits='userSpaceOnUse' x1='400' y1='148' x2='400' y2='333'%3E%3Cstop offset='0' stop-color='%23fdfff2' stop-opacity='0'/%3E%3Cstop offset='1' stop-color='%23fdfff2' stop-opacity='0.5'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect fill='url(%23a)' width='800' height='400'/%3E%3Cg fill-opacity='0.4'%3E%3Ccircle fill='url(%23b)' cx='267.5' cy='61' r='300'/%3E%3Ccircle fill='url(%23b)' cx='532.5' cy='61' r='300'/%3E%3Ccircle fill='url(%23b)' cx='400' cy='30' r='300'/%3E%3C/g%3E%3C/svg%3E");
     background-attachment: fixed;
@@ -648,7 +650,7 @@ body {
         }
 
         &--sinked {
-            background-color: $red;
+            background-color: darken($red, 10%);
             text-decoration: line-through;
         }
 
@@ -718,7 +720,7 @@ body {
         transition: all 0.2s ease-in-out;
 
         &--hit {
-            background-color: $red;
+            background-color: lighten($red, 3%);
             cursor: not-allowed;
         }
 
@@ -729,6 +731,10 @@ body {
         &--missed {
             background-color: transparent;
             cursor: not-allowed;
+        }
+
+        &--sinked {
+            background-color: darken($red, 10%);
         }
 
         &--placed {
@@ -776,6 +782,7 @@ body {
 }
 
 .slide-enter-active {
+    overflow: hidden;
     animation: slideRight 0.8s;
     @include screen(small) {
         animation: slideUp 0.8s;
