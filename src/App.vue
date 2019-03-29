@@ -131,7 +131,7 @@ export default {
                 // check if the ship is sinked
                 if (ship.length === ship.human.hitCounter) {
                     ship.human.isSinked = true;
-                    this.AIGrid.filter(cell => cell.shipId === ship.id).forEach(cell => cell.isSinked = true)
+                    this.setShipSink(this.AIGrid, ship)
                 }
                 // check if all ships are sinked
                 if (this.ships.every(ship => ship.human.isSinked)) {
@@ -232,7 +232,7 @@ export default {
             // check if the ship is sinked
             if (ship.length === ship.computer.hitCounter) {
                 ship.computer.isSinked = true;
-                this.grid.filter(cell => cell.shipId === ship.id).forEach(cell => cell.isSinked = true)
+                this.setShipSink(this.grid, ship)
                 // if there is no second target, the next attack will be a random one
                 if (this.secondTarget) {
                     this.firstTarget = this.secondTarget;
@@ -265,6 +265,9 @@ export default {
                     (target.x === x &&
                         (target.y === y + 1 || target.y === y - 1))
             );
+        },
+        setShipSink(grid, ship) {
+            grid.filter(cell => cell.shipId === ship.id).forEach(cell => cell.isSinked = true)
         },
         addShipIdToGrid(coordinates, grid) {
             if (!this.selectedShip) return;
@@ -470,7 +473,7 @@ body {
     height: 100%;
     @include flexCenter(center);
     @include screen(small) {
-        flex-direction: column;
+        display: block;
     }
 }
 
