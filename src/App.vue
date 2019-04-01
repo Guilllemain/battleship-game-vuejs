@@ -340,7 +340,10 @@ export default {
             );
         },
         placeShipsRandom() {
-            this.grid.forEach(cell => (cell.isEmpty = true));
+            this.grid.forEach(cell => {
+                cell.shipId = null
+                cell.isEmpty = true
+            });
             this.ships.forEach(ship => (ship.human.isReady = false));
             this.generateRandomCoordinates(this.grid);
         },
@@ -420,7 +423,7 @@ export default {
                 ship.computer.isSinked = false;
                 ship.computer.hitCounter = 0;
             });
-        }
+        },
     },
     created() {
         this.createGrid();
