@@ -117,9 +117,11 @@ export default {
     methods: {
         attackShip(coordinates) {
             if (this.gameOver) return
+            // retrieve the clicked cell
             const cell = this.AIGrid.find(
                 cell => cell.x === coordinates.x && cell.y === coordinates.y
             );
+            // retrieve the ship on the clicked cell
             const ship = this.ships[cell.shipId];
             if (cell.isEmpty && !cell.missed) {
                 cell.missed = true;
@@ -142,34 +144,31 @@ export default {
                 }
             }
             setTimeout(() => {
+                // wait 0,2s for the AI to attack, feels more natural
                 this.AIAttack();
             }, 200);
         },
         AIAttack(skip = false) {
             if (this.gameOver) return
 
+            // generate random numbers for the attack
             let randomX = Math.floor(Math.random() * 10);
             let randomY = Math.floor(Math.random() * 10);
 
+            // retrieve the cell based on the random generated numbers
             let cell = this.grid.find(
                 cell => cell.x === randomX && cell.y === randomY
             );
 
             if (!this.firstTarget && !skip) {
-                // if all cells are surrounded by at least one missed cell, relaunch this method but skip this part
-                if (
-                    this.getAdjacentCells(randomX, randomY).every(
-                        target => target.missed
-                    )
-                )
-                    return this.AIAttack(true);
+                // if all cells are surrounded by at least one missed cell
+                // relaunch this method but skip this part
+                const areCellsMissed = this.getAdjacentCells(randomX, randomY).every(target => target.missed)
+                if (areCellsMissed) return this.AIAttack(true);
+
                 // avoid hitting a cell next to a missed one
-                if (
-                    this.getAdjacentCells(randomX, randomY).some(
-                        target => target.missed
-                    )
-                )
-                    return this.AIAttack();
+                const isNextToMissed = this.getAdjacentCells(randomX, randomY).some(target => target.missed)
+                if (isNextToMissed) return this.AIAttack();
             }
 
             // check if there is any cells with a potential ship and select one randomly
@@ -192,17 +191,22 @@ export default {
             const ship = this.ships[cell.shipId];
             ship.computer.hitCounter += 1;
 
-            // if the computer hits another ship next to the first target, save the coordinates
+            // if the computer hits another ship next to the first target
+            // save the coordinates to attack after the current ship is sinked
             if (this.firstTarget && this.firstTarget.shipId !== cell.shipId) {
                 this.secondTarget = cell;
             }
 
             cell.prob = 0;
+            // add probability to the adjacents cells for next attacks
             this.getAdjacentCells(randomX, randomY).forEach(target => {
                 if (!target.hit && !target.missed) {
                     target.prob = 1;
                 }
             });
+
+            // if the ships ID is different than the one currently under attack
+            // add probability*2 to the adjacents cells for next attacks
             if (this.firstTarget && cell.shipId !== this.firstTarget.shipId) {
                 this.getAdjacentCells(randomX, randomY).forEach(target => {
                     if (!target.hit && !target.missed) {
@@ -210,6 +214,7 @@ export default {
                     }
                 });
             }
+            // reset cells porbability
             if (this.firstTarget && !this.secondTarget) {
                 if (this.firstTarget.x === cell.x) {
                     this.grid
@@ -257,6 +262,7 @@ export default {
                 return (this.isModalOpen = true);
             }
         },
+        // get all cells surrounding the one passed as parameter
         getAdjacentCells(x, y) {
             return this.grid.filter(
                 target =>
